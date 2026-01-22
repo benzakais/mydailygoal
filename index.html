@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Daily Rings</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes slide-up {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .animate-slide-up {
+            animation: slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Lucide React Icons (inline SVG components)
+        const Activity = ({ size = 24, className = "", ...props }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+        );
+
+        const Moon = ({ size = 24, style = {}, ...props }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style} {...props}>
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+        );
+
+        const Footprints = ({ size = 24, style = {}, ...props }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style} {...props}>
+                <path d="M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z"/>
+                <path d="M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z"/>
+            </svg>
+        );
+
+        const Dumbbell = ({ size = 24, style = {}, ...props }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style} {...props}>
+                <path d="m6.5 6.5 11 11"/>
+                <path d="m21 21-1-1"/>
+                <path d="m3 3 1 1"/>
+                <path d="m18 22 4-4"/>
+                <path d="m2 6 4-4"/>
+                <path d="m3 10 7-7"/>
+                <path d="m14 21 7-7"/>
+            </svg>
+        );
+
+        const Apple = ({ size = 24, style = {}, ...props }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style} {...props}>
+                <path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"/>
+                <path d="M10 2c1 .5 2 2 2 5"/>
+            </svg>
+        );
+
+        const Leaf = ({ size = 24, style = {}, ...props }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style} {...props}>
+                <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/>
+                <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+            </svg>
+        );
+
+        const Target = ({ size = 24, style = {}, ...props }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style} {...props}>
+                <circle cx="12" cy="12" r="10"/>
+                <circle cx="12" cy="12" r="6"/>
+                <circle cx="12" cy="12" r="2"/>
+            </svg>
+        );
+
+        const Book = ({ size = 24, style = {}, ...props }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style} {...props}>
+                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+            </svg>
+        );
+
+        const Headphones = ({ size = 24, style = {}, ...props }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style} {...props}>
+                <path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>
+            </svg>
+        );
+
+        const Brain = ({ size = 24, style = {}, ...props }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style} {...props}>
+                <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/>
+                <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/>
+                <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/>
+                <path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/>
+                <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/>
+                <path d="M3.477 10.896a4 4 0 0 1 .585-.396"/>
+                <path d="M19.938 10.5a4 4 0 0 1 .585.396"/>
+                <path d="M6 18a4 4 0 0 1-1.967-.516"/>
+                <path d="M19.967 17.484A4 4 0 0 1 18 18"/>
+            </svg>
+        );
+
+        const Plus = ({ size = 24, className = "", ...props }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+                <path d="M5 12h14"/>
+                <path d="M12 5v14"/>
+            </svg>
+        );
+
+        const Minus = ({ size = 24, className = "", ...props }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+                <path d="M5 12h14"/>
+            </svg>
+        );
+
+        const RotateCcw = ({ size = 24, ...props }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+            </svg>
+        );
+
+        const X = ({ size = 24, className = "", ...props }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+                <path d="M18 6 6 18"/>
+                <path d="m6 6 12 12"/>
+            </svg>
+        );
+
+        const ChevronRight = ({ size = 24, className = "", ...props }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+                <path d="m9 18 6-6-6-6"/>
+            </svg>
+        );
+
+        const Download = ({ size = 24, ...props }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" x2="12" y1="15" y2="3"/>
+            </svg>
+        );
+
+        // Activity Ring SVG Component with Glow
+        const ActivityRing = ({ progress, color, size = 120, strokeWidth = 12, glowIntensity = 0.6 }) => {
+            const radius = (size - strokeWidth) / 2;
+            const circumference = 2 * Math.PI * radius;
+            const offset = circumference - (progress / 100) * circumference;
+            const glowSize = Math.max(8, progress / 100 * 16);
+            const filterId = `glow-${color.replace('#', '')}`;
+
+            return (
+                <svg width={size} height={size} className="transform -rotate-90">
+                    <defs>
+                        <filter id={filterId}>
+                            <feGaussianBlur stdDeviation={glowSize * glowIntensity} result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    <circle
+                        cx={size / 2}
+                        cy={size / 2}
+                        r={radius}
+                        fill="none"
+                        stroke="rgba(255, 255, 255, 0.08)"
+                        strokeWidth={strokeWidth}
+                        strokeLinecap="round"
+                    />
+                    <circle
+                        cx={size / 2}
+                        cy={size / 2}
+                        r={radius}
+                        fill="none"
+                        stroke={color}
+                        strokeWidth={strokeWidth}
+                        strokeLinecap="round"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={offset}
+                        filter={`url(#${filterId})`}
+                        style={{
+                            transition: 'stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1)'
+                        }}
+                    />
+                </svg>
+            );
+        };
+
+        // Concentric Rings Component (3 rings for categories)
+        const CategoryConcentricRings = ({ metrics, colors, size = 240 }) => {
+            const strokeWidth = 16;
+            const spacing = 28;
+
+            const rings = [
+                { metric: metrics[0], size: size, color: colors[0] },
+                { metric: metrics[1], size: size - spacing * 2, color: colors[1] },
+                { metric: metrics[2], size: size - spacing * 4, color: colors[2] }
+            ];
+
+            return (
+                <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+                    {rings.map((ring, idx) => (
+                        <div key={idx} className="absolute">
+                            <ActivityRing
+                                progress={Math.min((ring.metric.current / ring.metric.goal) * 100, 100)}
+                                color={ring.color}
+                                size={ring.size}
+                                strokeWidth={strokeWidth}
+                                glowIntensity={0.8}
+                            />
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+
+        // Main Summary Concentric Rings
+        const MainSummaryRings = ({ healthProgress, nutritionProgress, growthProgress }) => {
+            const size = 280;
+            const strokeWidth = 20;
+            const spacing = 30;
+
+            return (
+                <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+                    <div className="absolute">
+                        <ActivityRing progress={healthProgress} color="#ff0054" size={size} strokeWidth={strokeWidth} glowIntensity={1} />
+                    </div>
+                    <div className="absolute">
+                        <ActivityRing progress={nutritionProgress} color="#00ff88" size={size - spacing * 2} strokeWidth={strokeWidth} glowIntensity={1} />
+                    </div>
+                    <div className="absolute">
+                        <ActivityRing progress={growthProgress} color="#00d4ff" size={size - spacing * 4} strokeWidth={strokeWidth} glowIntensity={1} />
+                    </div>
+                    <div className="relative text-center">
+                        <div className="text-6xl font-bold text-white mb-1">
+                            {Math.round((healthProgress + nutritionProgress + growthProgress) / 3)}%
+                        </div>
+                        <div className="text-sm text-gray-400 font-semibold tracking-wide">Daily Average</div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Update Panel (Action Sheet Style)
+        const UpdatePanel = ({ metric, onClose, onUpdate }) => {
+            const [value, setValue] = useState(metric.current.toString());
+            const IconComponent = metric.icon;
+
+            const handleSave = () => {
+                const numValue = parseFloat(value);
+                if (!isNaN(numValue) && numValue >= 0) {
+                    onUpdate(metric.id, numValue);
+                    onClose();
+                }
+            };
+
+            const increment = () => {
+                const newValue = metric.current + (metric.increment || 1);
+                setValue(newValue.toString());
+                onUpdate(metric.id, newValue);
+            };
+
+            const decrement = () => {
+                const newValue = Math.max(0, metric.current - (metric.increment || 1));
+                setValue(newValue.toString());
+                onUpdate(metric.id, newValue);
+            };
+
+            return (
+                <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center" onClick={onClose}>
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+                    <div
+                        className="relative w-full md:w-auto md:min-w-[400px] bg-slate-800/95 backdrop-blur-xl rounded-t-3xl md:rounded-3xl border border-slate-700/50 p-6 pb-8 md:pb-6 shadow-2xl animate-slide-up"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            onClick={onClose}
+                            className="absolute top-4 right-4 p-2 rounded-full bg-slate-700/50 hover:bg-slate-600/50 transition-colors"
+                        >
+                            <X size={20} className="text-gray-300" />
+                        </button>
+
+                        <div className="flex items-center justify-center gap-3 mb-8 mt-2">
+                            <div
+                                className="p-3 rounded-2xl"
+                                style={{ backgroundColor: `${metric.color}20` }}
+                            >
+                                <IconComponent size={28} style={{ color: metric.color }} />
+                            </div>
+                            <div className="text-left">
+                                <h3 className="text-white font-bold text-2xl">{metric.name}</h3>
+                                <p className="text-gray-400 text-sm">{metric.unit}</p>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-center mb-6">
+                            <ActivityRing
+                                progress={Math.min((parseFloat(value) / metric.goal) * 100, 100)}
+                                color={metric.color}
+                                size={160}
+                                strokeWidth={14}
+                                glowIntensity={1}
+                            />
+                        </div>
+
+                        <div className="text-center mb-6">
+                            <div className="text-4xl font-bold text-white mb-1">
+                                {parseFloat(value).toLocaleString('en-US')}
+                                <span className="text-gray-400 text-2xl ml-2">/{metric.goal.toLocaleString('en-US')}</span>
+                            </div>
+                            <div className="text-sm font-semibold" style={{ color: metric.color }}>
+                                {Math.round(Math.min((parseFloat(value) / metric.goal) * 100, 100))}% Complete
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={decrement}
+                                    className="flex-1 bg-slate-700 hover:bg-slate-600 active:scale-95 text-white rounded-2xl py-4 transition-all font-semibold text-lg"
+                                >
+                                    <Minus size={24} className="inline" />
+                                </button>
+                                <input
+                                    type="number"
+                                    value={value}
+                                    onChange={(e) => setValue(e.target.value)}
+                                    className="flex-1 bg-slate-700 text-white text-center rounded-2xl px-4 py-4 text-2xl font-bold focus:outline-none focus:ring-2"
+                                    onFocus={(e) => e.target.select()}
+                                />
+                                <button
+                                    onClick={increment}
+                                    className="flex-1 bg-slate-700 hover:bg-slate-600 active:scale-95 text-white rounded-2xl py-4 transition-all font-semibold text-lg"
+                                >
+                                    <Plus size={24} className="inline" />
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={handleSave}
+                                className="w-full text-white font-bold py-4 rounded-2xl transition-all active:scale-[0.98] shadow-lg"
+                                style={{
+                                    backgroundColor: metric.color,
+                                    boxShadow: `0 8px 32px ${metric.color}40`
+                                }}
+                            >
+                                Save & Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Category Master Card
+        const CategoryMasterCard = ({ title, metrics, colors, categoryColor, onMetricClick }) => {
+            return (
+                <div className="bg-gradient-to-br from-slate-800/40 to-slate-900/40 backdrop-blur-xl rounded-3xl p-6 border border-slate-700/30 hover:border-slate-600/40 transition-all duration-300 shadow-xl hover:shadow-2xl">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div
+                            className="w-1.5 h-10 rounded-full shadow-lg"
+                            style={{
+                                backgroundColor: categoryColor,
+                                boxShadow: `0 0 20px ${categoryColor}60`
+                            }}
+                        ></div>
+                        <h2 className="text-2xl font-bold text-white">{title}</h2>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row items-center gap-8">
+                        <div className="flex-shrink-0">
+                            <CategoryConcentricRings
+                                metrics={metrics}
+                                colors={colors}
+                                size={240}
+                            />
+                        </div>
+
+                        <div className="flex-1 w-full space-y-3">
+                            {metrics.map((metric, idx) => {
+                                const progress = Math.min((metric.current / metric.goal) * 100, 100);
+                                const IconComponent = metric.icon;
+
+                                return (
+                                    <div
+                                        key={metric.id}
+                                        onClick={() => onMetricClick(metric)}
+                                        className="bg-slate-800/40 backdrop-blur-sm rounded-2xl p-4 border border-slate-700/30 hover:border-slate-600/40 hover:bg-slate-800/60 transition-all cursor-pointer group"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3 flex-1">
+                                                <div
+                                                    className="p-2.5 rounded-xl"
+                                                    style={{ backgroundColor: `${colors[idx]}15` }}
+                                                >
+                                                    <IconComponent size={22} style={{ color: colors[idx] }} />
+                                                </div>
+
+                                                <div className="text-left">
+                                                    <div className="text-white font-bold text-lg">
+                                                        {metric.current.toLocaleString('en-US')}
+                                                        <span className="text-gray-400 text-sm font-normal ml-1">
+                                                            / {metric.goal.toLocaleString('en-US')}
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-xs font-semibold" style={{ color: colors[idx] }}>
+                                                        {Math.round(progress)}% Complete
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <ChevronRight className="text-gray-500 group-hover:text-gray-300 transition-colors" size={20} />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Main App Component
+        const MyDailyRings = () => {
+            const initialMetrics = {
+                distance: { id: 'distance', name: 'Distance', current: 0, goal: 5, unit: 'km', color: '#ff0054', icon: Footprints, category: 'health', increment: 0.5 },
+                pullups: { id: 'pullups', name: 'Pull-ups', current: 0, goal: 20, unit: 'reps', color: '#ff1f6f', icon: Dumbbell, category: 'health' },
+                sleep: { id: 'sleep', name: 'Sleep', current: 0, goal: 8, unit: 'hours', color: '#ff4d8a', icon: Moon, category: 'health', increment: 0.5 },
+                calories: { id: 'calories', name: 'Calories', current: 0, goal: 2500, unit: 'kcal', color: '#00ff88', icon: Apple, category: 'nutrition', increment: 100 },
+                protein: { id: 'protein', name: 'Protein', current: 0, goal: 150, unit: 'g', color: '#00ff9d', icon: Target, category: 'nutrition', increment: 10 },
+                fiber: { id: 'fiber', name: 'Fiber', current: 0, goal: 30, unit: 'g', color: '#2dffb3', icon: Leaf, category: 'nutrition', increment: 5 },
+                reading: { id: 'reading', name: 'Reading', current: 0, goal: 20, unit: 'pages', color: '#00d4ff', icon: Book, category: 'growth' },
+                listening: { id: 'listening', name: 'Listening', current: 0, goal: 30, unit: 'mins', color: '#00e0ff', icon: Headphones, category: 'growth', increment: 5 },
+                deepwork: { id: 'deepwork', name: 'Deep Work', current: 0, goal: 120, unit: 'mins', color: '#3deaff', icon: Brain, category: 'growth', increment: 15 },
+            };
+
+            const [metrics, setMetrics] = useState(() => {
+                const saved = localStorage.getItem('myDailyRings');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    const merged = {};
+                    Object.keys(initialMetrics).forEach(key => {
+                        merged[key] = {
+                            ...initialMetrics[key],
+                            current: parsed[key]?.current || 0
+                        };
+                    });
+                    return merged;
+                }
+                return initialMetrics;
+            });
+
+            const [selectedMetric, setSelectedMetric] = useState(null);
+
+            useEffect(() => {
+                const dataToSave = {};
+                Object.keys(metrics).forEach(key => {
+                    dataToSave[key] = { current: metrics[key].current };
+                });
+                localStorage.setItem('myDailyRings', JSON.stringify(dataToSave));
+            }, [metrics]);
+
+            const updateMetric = (id, newValue) => {
+                setMetrics(prev => ({
+                    ...prev,
+                    [id]: { ...prev[id], current: newValue }
+                }));
+            };
+
+            const resetDaily = () => {
+                if (window.confirm('Are you sure you want to reset all data?')) {
+                    const reset = {};
+                    Object.keys(metrics).forEach(key => {
+                        reset[key] = { ...metrics[key], current: 0 };
+                    });
+                    setMetrics(reset);
+                }
+            };
+
+            const downloadData = () => {
+                const dataToExport = {
+                    exportDate: new Date().toISOString(),
+                    metrics: {}
+                };
+
+                Object.keys(metrics).forEach(key => {
+                    dataToExport.metrics[key] = {
+                        name: metrics[key].name,
+                        current: metrics[key].current,
+                        goal: metrics[key].goal,
+                        unit: metrics[key].unit,
+                        category: metrics[key].category
+                    };
+                });
+
+                const dataStr = JSON.stringify(dataToExport, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `my-daily-rings-backup-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            };
+
+            const calculateCategoryProgress = (category) => {
+                const categoryMetrics = Object.values(metrics).filter(m => m.category === category);
+                const totalProgress = categoryMetrics.reduce((sum, m) => {
+                    return sum + Math.min((m.current / m.goal) * 100, 100);
+                }, 0);
+                return totalProgress / categoryMetrics.length;
+            };
+
+            const healthProgress = calculateCategoryProgress('health');
+            const nutritionProgress = calculateCategoryProgress('nutrition');
+            const growthProgress = calculateCategoryProgress('growth');
+
+            const healthMetrics = [metrics.distance, metrics.pullups, metrics.sleep];
+            const nutritionMetrics = [metrics.calories, metrics.protein, metrics.fiber];
+            const growthMetrics = [metrics.reading, metrics.listening, metrics.deepwork];
+
+            const healthColors = ['#ff0054', '#ff1f6f', '#ff4d8a'];
+            const nutritionColors = ['#00ff88', '#00ff9d', '#2dffb3'];
+            const growthColors = ['#00d4ff', '#00e0ff', '#3deaff'];
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-black via-slate-900 to-slate-800 text-white">
+                    <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-pink-500/10 rounded-full blur-[120px] animate-pulse"></div>
+                        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-green-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }}></div>
+                    </div>
+
+                    <div className="relative z-10 max-w-7xl mx-auto px-4 py-6 md:py-10">
+                        <div className="flex items-center justify-between mb-8">
+                            <div className="text-left">
+                                <h1 className="text-3xl md:text-5xl font-bold mb-1 bg-gradient-to-r from-pink-400 via-green-400 to-cyan-400 bg-clip-text text-transparent">
+                                    My Daily Rings
+                                </h1>
+                                <p className="text-gray-400 text-xs md:text-sm font-medium">
+                                    {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={downloadData}
+                                    className="flex items-center gap-2 bg-slate-800/60 hover:bg-slate-700/60 backdrop-blur-xl text-white px-4 py-2.5 rounded-2xl border border-slate-700/40 transition-all active:scale-95 shadow-lg"
+                                    title="Download Data Backup"
+                                >
+                                    <Download size={18} />
+                                    <span className="font-semibold text-sm hidden sm:inline">Backup</span>
+                                </button>
+                                <button
+                                    onClick={resetDaily}
+                                    className="flex items-center gap-2 bg-slate-800/60 hover:bg-slate-700/60 backdrop-blur-xl text-white px-4 py-2.5 rounded-2xl border border-slate-700/40 transition-all active:scale-95 shadow-lg"
+                                >
+                                    <RotateCcw size={18} />
+                                    <span className="font-semibold text-sm hidden sm:inline">Reset</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="bg-gradient-to-br from-slate-800/30 to-slate-900/30 backdrop-blur-xl rounded-3xl p-6 md:p-10 mb-8 border border-slate-700/30 shadow-2xl">
+                            <div className="flex flex-col items-center">
+                                <MainSummaryRings
+                                    healthProgress={healthProgress}
+                                    nutritionProgress={nutritionProgress}
+                                    growthProgress={growthProgress}
+                                />
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 w-full max-w-2xl">
+                                    <div className="bg-slate-800/40 backdrop-blur-sm rounded-2xl p-4 border border-slate-700/30 text-center">
+                                        <div className="flex items-center justify-center gap-2 mb-2">
+                                            <div className="w-3 h-3 rounded-full bg-pink-500 shadow-lg shadow-pink-500/50"></div>
+                                            <span className="text-sm font-semibold text-gray-300">Health</span>
+                                        </div>
+                                        <div className="text-3xl font-bold text-white">{Math.round(healthProgress)}%</div>
+                                    </div>
+                                    <div className="bg-slate-800/40 backdrop-blur-sm rounded-2xl p-4 border border-slate-700/30 text-center">
+                                        <div className="flex items-center justify-center gap-2 mb-2">
+                                            <div className="w-3 h-3 rounded-full bg-green-400 shadow-lg shadow-green-400/50"></div>
+                                            <span className="text-sm font-semibold text-gray-300">Nutrition</span>
+                                        </div>
+                                        <div className="text-3xl font-bold text-white">{Math.round(nutritionProgress)}%</div>
+                                    </div>
+                                    <div className="bg-slate-800/40 backdrop-blur-sm rounded-2xl p-4 border border-slate-700/30 text-center">
+                                        <div className="flex items-center justify-center gap-2 mb-2">
+                                            <div className="w-3 h-3 rounded-full bg-cyan-400 shadow-lg shadow-cyan-400/50"></div>
+                                            <span className="text-sm font-semibold text-gray-300">Personal Growth</span>
+                                        </div>
+                                        <div className="text-3xl font-bold text-white">{Math.round(growthProgress)}%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6">
+                            <CategoryMasterCard
+                                title="Health"
+                                metrics={healthMetrics}
+                                colors={healthColors}
+                                categoryColor="#ff0054"
+                                onMetricClick={setSelectedMetric}
+                            />
+
+                            <CategoryMasterCard
+                                title="Nutrition"
+                                metrics={nutritionMetrics}
+                                colors={nutritionColors}
+                                categoryColor="#00ff88"
+                                onMetricClick={setSelectedMetric}
+                            />
+
+                            <CategoryMasterCard
+                                title="Personal Growth"
+                                metrics={growthMetrics}
+                                colors={growthColors}
+                                categoryColor="#00d4ff"
+                                onMetricClick={setSelectedMetric}
+                            />
+                        </div>
+
+                        <div className="text-center text-gray-500 text-sm mt-12 pb-6">
+                            <Activity className="inline-block mb-2 opacity-50" size={20} />
+                            <p className="font-medium">Track your daily progress and achieve your goals</p>
+                        </div>
+                    </div>
+
+                    {selectedMetric && (
+                        <UpdatePanel
+                            metric={selectedMetric}
+                            onClose={() => setSelectedMetric(null)}
+                            onUpdate={updateMetric}
+                        />
+                    )}
+                </div>
+            );
+        };
+
+        // Render the app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<MyDailyRings />);
+    </script>
+</body>
+</html>
