@@ -635,10 +635,15 @@
             };
 
             const loadMetrics = async () => {
-                if (!user) return;
+                if (!user) {
+                    console.log('❌ No user, skipping load');
+                    return;
+                }
 
                 try {
                     const dateStr = formatDate(selectedDate);
+                    console.log('📅 Loading metrics for date:', dateStr, 'user:', user.id);
+                    
                     const { data, error } = await supabaseClient
                         .from('daily_metrics')
                         .select('*')
@@ -646,22 +651,29 @@
                         .eq('date', dateStr)
                         .single();
 
+                    console.log('📊 Database response:', { data, error });
+
                     if (data) {
+                        console.log('✅ Found data in database:', data);
                         const updatedMetrics = { ...initialMetrics };
                         Object.keys(updatedMetrics).forEach(key => {
                             if (data[key] !== undefined && data[key] !== null) {
+                                const value = parseFloat(data[key]) || 0;
+                                console.log(`   ${key}: ${data[key]} -> ${value}`);
                                 updatedMetrics[key] = {
                                     ...updatedMetrics[key],
-                                    current: parseFloat(data[key]) || 0
+                                    current: value
                                 };
                             }
                         });
+                        console.log('🎯 Setting metrics:', updatedMetrics);
                         setMetrics(updatedMetrics);
                     } else {
+                        console.log('⚠️ No data found, using empty metrics');
                         setMetrics(initialMetrics);
                     }
                 } catch (err) {
-                    console.log('No data for this date, showing empty metrics');
+                    console.log('❌ Error or no data:', err);
                     setMetrics(initialMetrics);
                 }
             };
@@ -670,6 +682,7 @@
                 if (!user) return;
 
                 const numValue = parseFloat(newValue) || 0;
+                console.log('💾 Saving metric:', id, '=', numValue);
                 
                 // Update local state immediately for UI feedback
                 const updatedMetrics = {
@@ -679,24 +692,48 @@
                 setMetrics(updatedMetrics);
 
                 const dateStr = formatDate(selectedDate);
+                
+                // First, get existing data for this date
+                const { data: existingData } = await supabaseClient
+                    .from('daily_metrics')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .eq('date', dateStr)
+                    .single();
+
+                // Merge new value with existing data
                 const dataToSave = {
                     user_id: user.id,
                     date: dateStr,
-                    [id]: numValue
+                    distance: existingData?.distance || 0,
+                    pullups: existingData?.pullups || 0,
+                    sleep: existingData?.sleep || 0,
+                    calories: existingData?.calories || 0,
+                    protein: existingData?.protein || 0,
+                    fiber: existingData?.fiber || 0,
+                    reading: existingData?.reading || 0,
+                    listening: existingData?.listening || 0,
+                    deepwork: existingData?.deepwork || 0,
+                    [id]: numValue  // Update just this metric
                 };
 
+                console.log('📤 Sending to database:', dataToSave);
+
                 try {
-                    const { error } = await supabaseClient
+                    const { data, error } = await supabaseClient
                         .from('daily_metrics')
-                        .upsert(dataToSave, { onConflict: 'user_id,date' });
+                        .upsert(dataToSave, { onConflict: 'user_id,date' })
+                        .select();
 
                     if (error) {
-                        console.error('Error saving metric:', error);
+                        console.error('❌ Error saving metric:', error);
                         // Reload data if save fails
                         loadMetrics();
+                    } else {
+                        console.log('✅ Saved successfully:', data);
                     }
                 } catch (err) {
-                    console.error('Exception saving metric:', err);
+                    console.error('❌ Exception saving metric:', err);
                 }
             };
 
