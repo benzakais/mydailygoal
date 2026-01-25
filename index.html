@@ -193,6 +193,14 @@
             </svg>
         );
 
+        const Refresh = ({ size = 24, className = "", ...props }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
+                <polyline points="23 4 23 10 17 10"/>
+                <polyline points="1 20 1 14 7 14"/>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36M20.49 15a9 9 0 0 1-14.85 3.36"/>
+            </svg>
+        );
+
         // Activity Ring Component
         const ActivityRing = ({ progress, color, size = 120, strokeWidth = 12, glowIntensity = 0.6 }) => {
             const radius = (size - strokeWidth) / 2;
@@ -587,6 +595,7 @@
         const MyDailyRings = () => {
             const [user, setUser] = useState(null);
             const [loading, setLoading] = useState(true);
+            const [loadingMetrics, setLoadingMetrics] = useState(false);
             const [selectedDate, setSelectedDate] = useState(new Date());
             const [selectedMetric, setSelectedMetric] = useState(null);
 
@@ -610,7 +619,8 @@
 
             useEffect(() => {
                 if (user) {
-                    loadMetrics();
+                    setLoadingMetrics(true);
+                    loadMetrics().finally(() => setLoadingMetrics(false));
                 }
             }, [user, selectedDate]);
 
@@ -627,26 +637,31 @@
             const loadMetrics = async () => {
                 if (!user) return;
 
-                const dateStr = formatDate(selectedDate);
-                const { data, error } = await supabaseClient
-                    .from('daily_metrics')
-                    .select('*')
-                    .eq('user_id', user.id)
-                    .eq('date', dateStr)
-                    .single();
+                try {
+                    const dateStr = formatDate(selectedDate);
+                    const { data, error } = await supabaseClient
+                        .from('daily_metrics')
+                        .select('*')
+                        .eq('user_id', user.id)
+                        .eq('date', dateStr)
+                        .single();
 
-                if (data) {
-                    const updatedMetrics = { ...initialMetrics };
-                    Object.keys(updatedMetrics).forEach(key => {
-                        if (data[key] !== undefined && data[key] !== null) {
-                            updatedMetrics[key] = {
-                                ...updatedMetrics[key],
-                                current: data[key]
-                            };
-                        }
-                    });
-                    setMetrics(updatedMetrics);
-                } else {
+                    if (data) {
+                        const updatedMetrics = { ...initialMetrics };
+                        Object.keys(updatedMetrics).forEach(key => {
+                            if (data[key] !== undefined && data[key] !== null) {
+                                updatedMetrics[key] = {
+                                    ...updatedMetrics[key],
+                                    current: parseFloat(data[key]) || 0
+                                };
+                            }
+                        });
+                        setMetrics(updatedMetrics);
+                    } else {
+                        setMetrics(initialMetrics);
+                    }
+                } catch (err) {
+                    console.log('No data for this date, showing empty metrics');
                     setMetrics(initialMetrics);
                 }
             };
@@ -654,9 +669,12 @@
             const updateMetric = async (id, newValue) => {
                 if (!user) return;
 
+                const numValue = parseFloat(newValue) || 0;
+                
+                // Update local state immediately for UI feedback
                 const updatedMetrics = {
                     ...metrics,
-                    [id]: { ...metrics[id], current: newValue }
+                    [id]: { ...metrics[id], current: numValue }
                 };
                 setMetrics(updatedMetrics);
 
@@ -664,15 +682,21 @@
                 const dataToSave = {
                     user_id: user.id,
                     date: dateStr,
-                    [id]: newValue
+                    [id]: numValue
                 };
 
-                const { error } = await supabaseClient
-                    .from('daily_metrics')
-                    .upsert(dataToSave, { onConflict: 'user_id,date' });
+                try {
+                    const { error } = await supabaseClient
+                        .from('daily_metrics')
+                        .upsert(dataToSave, { onConflict: 'user_id,date' });
 
-                if (error) {
-                    console.error('Error saving metric:', error);
+                    if (error) {
+                        console.error('Error saving metric:', error);
+                        // Reload data if save fails
+                        loadMetrics();
+                    }
+                } catch (err) {
+                    console.error('Exception saving metric:', err);
                 }
             };
 
@@ -780,6 +804,15 @@
                                 </p>
                             </div>
                             <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => loadMetrics()}
+                                    disabled={loadingMetrics}
+                                    className="flex items-center gap-2 bg-slate-800/60 hover:bg-slate-700/60 backdrop-blur-xl text-white px-4 py-2.5 rounded-2xl border border-slate-700/40 transition-all active:scale-95 shadow-lg disabled:opacity-50"
+                                    title="Refresh data from database"
+                                >
+                                    <Refresh size={18} className={loadingMetrics ? 'animate-spin' : ''} />
+                                    <span className="font-semibold text-sm hidden sm:inline">Sync</span>
+                                </button>
                                 <button
                                     onClick={downloadData}
                                     className="flex items-center gap-2 bg-slate-800/60 hover:bg-slate-700/60 backdrop-blur-xl text-white px-4 py-2.5 rounded-2xl border border-slate-700/40 transition-all active:scale-95 shadow-lg"
